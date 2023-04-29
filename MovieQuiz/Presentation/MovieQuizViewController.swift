@@ -36,17 +36,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-         guard let question = question else {
-               return
-         }
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-        self?.show(quiz: viewModel)
-        }
+        presenter.didReceiveNextQuestion(question: question)
+ //       presenter.didRecieveNextQuestion(question: question)
+//         guard let question = question else {
+//               return
+//         }
+//        currentQuestion = question
+//        let viewModel = presenter.convert(model: question)
+//        DispatchQueue.main.async { [weak self] in
+//        self?.show(quiz: viewModel)
+//        }
     }
     
-    private func show(quiz step: QuizStepViewModel) {
+    func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
         counterLabel.text = step.questionNumber
         textLabel.text = step.question
@@ -146,12 +148,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked()
     }
        
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked()
     }
    
