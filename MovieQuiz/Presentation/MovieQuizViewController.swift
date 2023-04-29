@@ -12,7 +12,6 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     private var presenter: MovieQuizPresenter!
-   // private var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: AlertPresenter?
     private var statisticService: StatisticService?
     private var currentQuestion: QuizQuestion?
@@ -24,19 +23,11 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.borderWidth = 0
         imageView.layer.cornerRadius = 20
         presenter = MovieQuizPresenter(viewController: self)
-     //   questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         showLoadingIndicator()
-     //   questionFactory?.loadData()
         alertPresenter = AlertPresenter(viewController: self)
-      
-     //   questionFactory?.requestNextQuestion()
         statisticService = StatisticServiceImplementation()
         presenter.viewController = self
     }
-    
-//    func didReceiveNextQuestion(question: QuizQuestion?) {
-//        presenter.didReceiveNextQuestion(question: question)
-//    }
     
     func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -48,7 +39,7 @@ final class MovieQuizViewController: UIViewController {
     func showFinalResults() {
         statisticService?.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
         
-        let alertModel = AlertModel(title: "Игра окончена!", message: makeResultMessage(), buttonText: "OK") { [weak self] in
+        let alertModel = AlertModel(title: "Игра окончена!", message: presenter.makeResultMessage(), buttonText: "OK") { [weak self] in
             guard let self else {
                 return
             }
@@ -60,21 +51,6 @@ final class MovieQuizViewController: UIViewController {
         alertPresenter?.show(alertModel: alertModel)
     }
     
-    private func makeResultMessage() -> String {
-        guard let statisticService, let bestGame = statisticService.bestGame else {
-            return ""
-        }
-        
-        let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
-        let currentGameResultLine = "Ваш результат: \(presenter.correctAnswers)/\(presenter.questionsAmount)"
-        let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))"
-        let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
-        
-        let resultMessage = [totalPlaysCountLine, currentGameResultLine, bestGameInfoLine, averageAccuracyLine].joined(separator: "\n")
-        
-        return resultMessage
-    }
-    
     func showAnswerResult(isCorrect: Bool) {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -82,8 +58,6 @@ final class MovieQuizViewController: UIViewController {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-           
-      //      self.presenter.questionFactory = self.questionFactory
             self.presenter.showNextQuestionOrResults()
         }
     }
@@ -99,15 +73,6 @@ final class MovieQuizViewController: UIViewController {
         activityIndicator.stopAnimating()
     }
     
-//    func didLoadDataFromServer() {
-//        activityIndicator.isHidden = true
-//        questionFactory?.requestNextQuestion()
-//    }
-
-//    func didFailToLoadData(with error: Error) {
-//        showNetworkError(message: error.localizedDescription)
-//    }
-    
     func showNetworkError(message: String) {
         hideLoadingIndicator()
         
@@ -118,8 +83,6 @@ final class MovieQuizViewController: UIViewController {
             
             self.presenter.resetQuestionIndex()
             self.presenter.restartGame()
-            
-         //   self.questionFactory?.requestNextQuestion()
         }
         
         alertPresenter?.show(alertModel: model)

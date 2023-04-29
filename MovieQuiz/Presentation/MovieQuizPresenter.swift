@@ -12,18 +12,18 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
     var correctAnswers: Int = 0
-    var currentQuestion: QuizQuestion?
-   // weak var viewController: MovieQuizViewController?
-     
+    private let statisticService: StatisticService!
     private var questionFactory: QuestionFactoryProtocol?
     weak var viewController: MovieQuizViewController?
         
     init(viewController: MovieQuizViewController) {
-            self.viewController = viewController
+        self.viewController = viewController
             
-            questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-            questionFactory?.loadData()
-            viewController.showLoadingIndicator()
+        statisticService = StatisticServiceImplementation()
+            
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
     }
     
     func isLastQuestion() -> Bool {
@@ -46,14 +46,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     func didAnswer(isYes: Bool) {
-            guard let currentQuestion = currentQuestion else {
-                return
-            }
-            let givenAnswer = isYes
-            if (givenAnswer) { correctAnswers += 1 }
-            viewController?.yesButton.isEnabled = false
-            viewController?.noButton.isEnabled = false
-            viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+
+        let givenAnswer = isYes
+        if (givenAnswer) { correctAnswers += 1 }
+        viewController?.yesButton.isEnabled = false
+        viewController?.noButton.isEnabled = false
+        viewController?.showAnswerResult(isCorrect: givenAnswer)
     }
     
     func yesButtonClicked() {
@@ -65,10 +63,9 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-         guard let question = question else {
-               return
-         }
-        currentQuestion = question
+        guard let question = question else {
+              return
+        }
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.viewController?.show(quiz: viewModel)
@@ -103,4 +100,18 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             viewController?.showNetworkError(message: message)
     }
     
+    func makeResultMessage() -> String {
+        guard let statisticService, let bestGame = statisticService.bestGame else {
+            return ""
+        }
+        
+        let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
+        let currentGameResultLine = "Ваш результат: \(correctAnswers)/\(questionsAmount)"
+        let bestGameInfoLine = "Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))"
+        let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+        
+        let resultMessage = [totalPlaysCountLine, currentGameResultLine, bestGameInfoLine, averageAccuracyLine].joined(separator: "\n")
+        
+        return resultMessage
+    }
 } 
