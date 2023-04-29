@@ -33,24 +33,23 @@ final class MovieQuizPresenter {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
-    func yesButtonClicked() {
-        guard let currentQuestion else {
-            return
+    private func didAnswer(isYes: Bool) {
+            guard let currentQuestion = currentQuestion else {
+                return
+            }
+            
+            let givenAnswer = isYes
+            viewController?.yesButton.isEnabled = false
+            viewController?.noButton.isEnabled = false
+            viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
         }
-        viewController?.yesButton.isEnabled = false
-        viewController?.noButton.isEnabled = false
-        let givenAnswer = true
-        viewController?.showAnswerResult(isCorrect: currentQuestion.correctAnswer == givenAnswer)
+    
+    func yesButtonClicked() {
+        didAnswer(isYes: true)
     }
     
     func noButtonClicked() {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        viewController?.yesButton.isEnabled = false
-        viewController?.noButton.isEnabled = false
-        let givenAnswer = false
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        didAnswer(isYes: false)
     }
     
 } 
