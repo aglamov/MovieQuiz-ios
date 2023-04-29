@@ -35,16 +35,16 @@ final class MovieQuizPresenter {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
-    private func didAnswer(isYes: Bool) {
+    func didAnswer(isYes: Bool) {
             guard let currentQuestion = currentQuestion else {
                 return
             }
-            
             let givenAnswer = isYes
+            if (givenAnswer) { correctAnswers += 1 }
             viewController?.yesButton.isEnabled = false
             viewController?.noButton.isEnabled = false
             viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-        }
+    }
     
     func yesButtonClicked() {
         didAnswer(isYes: true)
@@ -77,4 +77,9 @@ final class MovieQuizPresenter {
         }
     }
     
+    func restartGame() {
+            currentQuestionIndex = 0
+            correctAnswers = 0
+            questionFactory?.requestNextQuestion()
+    }
 } 
