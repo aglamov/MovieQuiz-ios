@@ -9,22 +9,24 @@ import Foundation
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    let questionsAmount: Int = 10
-    private var currentQuestionIndex: Int = 0
-    var correctAnswers: Int = 0
     private let statisticService: StatisticService!
     private var questionFactory: QuestionFactoryProtocol?
-    weak var viewController: MovieQuizViewController?
-        
+    private weak var viewController: MovieQuizViewController?
+    private var currentQuestion: QuizQuestion?
+    
+    private let questionsAmount: Int = 10
+    private var currentQuestionIndex: Int = 0
+    private var correctAnswers: Int = 0
+    
     init(viewController: MovieQuizViewController) {
-        self.viewController = viewController
-            
-        statisticService = StatisticServiceImplementation()
-            
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        questionFactory?.loadData()
-        viewController.showLoadingIndicator()
-    }
+         self.viewController = viewController
+
+         statisticService = StatisticServiceImplementation()
+
+         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+         questionFactory?.loadData()
+         viewController.showLoadingIndicator()
+     }
     
     func isLastQuestion() -> Bool {
         currentQuestionIndex == questionsAmount - 1
@@ -45,13 +47,10 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
     }
     
-    func didAnswer(isYes: Bool) {
-
+    private func didAnswer(isYes: Bool) {
         let givenAnswer = isYes
         if (givenAnswer) { correctAnswers += 1 }
-        viewController?.yesButton.isEnabled = false
-        viewController?.noButton.isEnabled = false
-        viewController?.showAnswerResult(isCorrect: givenAnswer)
+        showAnswerResult(isCorrect: givenAnswer)
     }
     
     func yesButtonClicked() {
@@ -73,11 +72,8 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     func showNextQuestionOrResults() {
-        viewController?.yesButton.isEnabled = true
-        viewController?.noButton.isEnabled = true
         if isLastQuestion() {
-            //self.viewController?.showFinalResults()
-            viewController?.showFinalResults()
+            self.showFinalResults()
         } else {
             self.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
@@ -113,5 +109,26 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         let resultMessage = [totalPlaysCountLine, currentGameResultLine, bestGameInfoLine, averageAccuracyLine].joined(separator: "\n")
         
         return resultMessage
+    }
+    
+    func showAnswerResult(isCorrect: Bool) {
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+             guard let self = self else { return }
+               self.showNextQuestionOrResults()
+        }
+    }
+    
+    func showFinalResults() {
+        statisticService?.store(correct: correctAnswers, total: questionsAmount)
+        
+        let alertModel = AlertModel(title: "Игра окончена!", message: makeResultMessage(), buttonText: "OK") { [weak self] in
+            guard let self else {
+                return
+            }
+            self.resetQuestionIndex()
+            self.restartGame()
+        }
+        viewController?.alertPresenter?.show(alertModel: alertModel)
     }
 } 

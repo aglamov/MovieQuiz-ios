@@ -5,64 +5,35 @@ final class MovieQuizViewController: UIViewController {
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var textLabel: UILabel!
-    
-    @IBOutlet weak var yesButton: UIButton!
-    @IBOutlet weak var noButton: UIButton!
-    
+    @IBOutlet private weak var yesButton: UIButton!
+    @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     private var presenter: MovieQuizPresenter!
-    private var alertPresenter: AlertPresenter?
-    private var statisticService: StatisticService?
-    private var currentQuestion: QuizQuestion?
-    private var currentRounds: Int = 0
-    
+    var alertPresenter: AlertPresenter?
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 0
         imageView.layer.cornerRadius = 20
         presenter = MovieQuizPresenter(viewController: self)
-        showLoadingIndicator()
         alertPresenter = AlertPresenter(viewController: self)
-        statisticService = StatisticServiceImplementation()
-        presenter.viewController = self
     }
     
     func show(quiz step: QuizStepViewModel) {
+        imageView.layer.borderColor = UIColor.clear.cgColor
         imageView.image = step.image
         counterLabel.text = step.questionNumber
         textLabel.text = step.question
-        imageView.layer.borderWidth = 0
+        let show = true
+        bootonIsDisabled (show)
     }
-        
-    func showFinalResults() {
-        statisticService?.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
-        
-        let alertModel = AlertModel(title: "Игра окончена!", message: presenter.makeResultMessage(), buttonText: "OK") { [weak self] in
-            guard let self else {
-                return
-            }
-            self.presenter.resetQuestionIndex()
-            self.presenter.restartGame()            
-         //   self.questionFactory?.requestNextQuestion()
-        }
-        
-        alertPresenter?.show(alertModel: alertModel)
+
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+            imageView.layer.masksToBounds = true
+            imageView.layer.borderWidth = 8
+            imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
     
-    func showAnswerResult(isCorrect: Bool) {
-        imageView.layer.masksToBounds = true
-        imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            guard let self = self else { return }
-            self.presenter.showNextQuestionOrResults()
-        }
-    }
-
-     
     func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
@@ -88,12 +59,26 @@ final class MovieQuizViewController: UIViewController {
         alertPresenter?.show(alertModel: model)
     }
     
+    private func bootonIsDisabled (_ show: Bool) {
+        if !show {
+            yesButton.isEnabled = false
+            noButton.isEnabled = false
+        } else {
+            yesButton.isEnabled = true
+            noButton.isEnabled = true
+        }
+    }
+    
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
+        let show = false
+        bootonIsDisabled (show)
         presenter.yesButtonClicked()
     }
        
     @IBAction private func noButtonClicked(_ sender: UIButton) {
+        let show = false
+        bootonIsDisabled (show)
         presenter.noButtonClicked()
     }
    
