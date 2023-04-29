@@ -11,11 +11,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
-    private var statisticService: StatisticService?
+    private let presenter = MovieQuizPresenter()
     private let questionsAmount: Int = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: AlertPresenter?
-   
+    private var statisticService: StatisticService?
     private var currentQuestion: QuizQuestion?
     private var correctAnswers: Int = 0
     private var currentQuestionIndex: Int = 0
@@ -26,42 +26,25 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 0
         imageView.layer.cornerRadius = 20
-        //questionFactory = QuestionFactory(delegate: self)
-       
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-       // statisticService = StatisticServiceImplementation()
-
         showLoadingIndicator()
         questionFactory?.loadData()
-                
         alertPresenter = AlertPresenter(viewController: self)
-        
-        // MARK: - QuestionFactoryDelegate
-        func didReceiveNextQuestion(question: QuizQuestion?) {
-            guard let question = question else {
-                return
-            }
-            
-            currentQuestion = question
-            let viewModel = convert(model: question)
-            DispatchQueue.main.async { [weak self] in
-                self?.show(quiz: viewModel)
-            }
-        }
-        
+      
         questionFactory?.requestNextQuestion()
         statisticService = StatisticServiceImplementation()
         
     }
     
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else {
-            return
-        }
-        
+         guard let question = question else {
+               return
+         }
         currentQuestion = question
-        let viewModel = convert(model: question)
-        show(quiz: viewModel)
+        let viewModel = presenter.convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+        self?.show(quiz: viewModel)
+        }
     }
     
     private func show(quiz step: QuizStepViewModel) {
@@ -71,13 +54,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.borderWidth = 0
     }
         
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-    }
-    
     private func showFinalResults() {
         statisticService?.store(correct: correctAnswers, total: questionsAmount)
         
