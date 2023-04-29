@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
+final class MovieQuizViewController: UIViewController {
            
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
@@ -11,8 +11,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
-    private let presenter = MovieQuizPresenter()
-    private var questionFactory: QuestionFactoryProtocol?
+    private var presenter: MovieQuizPresenter!
+   // private var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: AlertPresenter?
     private var statisticService: StatisticService?
     private var currentQuestion: QuizQuestion?
@@ -23,19 +23,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 0
         imageView.layer.cornerRadius = 20
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        presenter = MovieQuizPresenter(viewController: self)
+     //   questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         showLoadingIndicator()
-        questionFactory?.loadData()
+     //   questionFactory?.loadData()
         alertPresenter = AlertPresenter(viewController: self)
       
-        questionFactory?.requestNextQuestion()
+     //   questionFactory?.requestNextQuestion()
         statisticService = StatisticServiceImplementation()
         presenter.viewController = self
     }
     
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        presenter.didReceiveNextQuestion(question: question)
-    }
+//    func didReceiveNextQuestion(question: QuizQuestion?) {
+//        presenter.didReceiveNextQuestion(question: question)
+//    }
     
     func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -53,7 +54,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             }
             self.presenter.resetQuestionIndex()
             self.presenter.restartGame()            
-            self.questionFactory?.requestNextQuestion()
+         //   self.questionFactory?.requestNextQuestion()
         }
         
         alertPresenter?.show(alertModel: alertModel)
@@ -82,32 +83,32 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
            
-            self.presenter.questionFactory = self.questionFactory
+      //      self.presenter.questionFactory = self.questionFactory
             self.presenter.showNextQuestionOrResults()
         }
     }
 
      
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     
-    private func hideLoadingIndicator() {
+    func hideLoadingIndicator() {
         activityIndicator.isHidden = true
         activityIndicator.stopAnimating()
     }
     
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
-        questionFactory?.requestNextQuestion()
-    }
+//    func didLoadDataFromServer() {
+//        activityIndicator.isHidden = true
+//        questionFactory?.requestNextQuestion()
+//    }
 
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription) 
-    }
+//    func didFailToLoadData(with error: Error) {
+//        showNetworkError(message: error.localizedDescription)
+//    }
     
-    private func showNetworkError(message: String) {
+    func showNetworkError(message: String) {
         hideLoadingIndicator()
         
         let model = AlertModel(title: "Ошибка",
@@ -118,7 +119,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             self.presenter.resetQuestionIndex()
             self.presenter.restartGame()
             
-            self.questionFactory?.requestNextQuestion()
+         //   self.questionFactory?.requestNextQuestion()
         }
         
         alertPresenter?.show(alertModel: model)
