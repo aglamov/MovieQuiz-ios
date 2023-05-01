@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
            
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var counterLabel: UILabel!
@@ -28,6 +28,11 @@ final class MovieQuizViewController: UIViewController {
         bootonIsDisabled (show)
     }
 
+    func printAlert (alertModel: AlertModel) {
+        alertPresenter?.show(alertModel: alertModel)
+    }
+    
+    
     func highlightImageBorder(isCorrectAnswer: Bool) {
             imageView.layer.masksToBounds = true
             imageView.layer.borderWidth = 8
